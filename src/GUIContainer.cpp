@@ -36,16 +36,17 @@ void GUI::Container::setTarget(sf::RenderTarget* target)
 
 void GUI::Container::handleIn()
 {
-    if (!disabled)
+    if (!disabled) {
         handleInput();
 
-    size_t sizeConnects = connects->size();
-    for (uint32_t i = sizeConnects; i > 0U; i--)
-        (*connects)[i - 1U]->handleIn();
+        size_t sizeConnects = connects->size();
+        for (uint32_t i = sizeConnects; i > 0U; i--)
+            (*connects)[i - 1U]->handleIn();
 
-    size_t size = childrens->size();
-    for (uint32_t i = size; i > 0U; i--)
-        (*childrens)[i - 1U]->handleIn();
+        size_t size = childrens->size();
+        for (uint32_t i = size; i > 0U; i--)
+            (*childrens)[i - 1U]->handleIn();
+    }
 }
 
 void GUI::Container::handleEv(const sf::Event& event)
@@ -69,43 +70,44 @@ void GUI::Container::handleEv(const sf::Event& event)
         sizeTarget = target->getSize();
     }
 
-    if (!disabled)
+    if (!disabled) {
         handleEvent(event);
 
-    bool isScreenEventObject = false;
+        bool isScreenEventObject = false;
 
-    Object* connect;
-    for (uint32_t i = connects->size(); i > 0U; i--) {
-        connect = (*connects)[i - 1U];
-
-        if (!isScreenEventObject &&
-            ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
-                connect->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
-             (event.type == sf::Event::MouseMoved &&
-                connect->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
-        {
-            connect->handleEv(event);
-            isScreenEventObject = true;
-        } else
-            connect->handleEv(event);
-    }
-
-    isScreenEventObject = false;
-
-    Object* child;
-    for (uint32_t i = childrens->size(); i > 0U; i--) {
-        child = (*childrens)[i - 1U];
+        Object* connect;
+        for (uint32_t i = connects->size(); i > 0U; i--) {
+            connect = (*connects)[i - 1U];
 
             if (!isScreenEventObject &&
                 ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
-                    child->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
-                 (event.type == sf::Event::MouseMoved &&
-                    child->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
+                    connect->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
+                (event.type == sf::Event::MouseMoved &&
+                    connect->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
             {
-                child->handleEv(event);
+                connect->handleEv(event);
                 isScreenEventObject = true;
             } else
-                child->handleEv(event);
+                connect->handleEv(event);
+        }
+
+        isScreenEventObject = false;
+
+        Object* child;
+        for (uint32_t i = childrens->size(); i > 0U; i--) {
+            child = (*childrens)[i - 1U];
+
+                if (!isScreenEventObject &&
+                    ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
+                        child->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
+                    (event.type == sf::Event::MouseMoved &&
+                        child->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
+                {
+                    child->handleEv(event);
+                    isScreenEventObject = true;
+                } else
+                    child->handleEv(event);
+        }
     }
 }
 
@@ -114,35 +116,36 @@ void GUI::Container::upd(float dt)
     if (border && updatedBorder)
         updateBorder();
 
-    if (!disabled)
+    if (!disabled) {
         update(dt);
 
-    for (auto& connect : *connects)
-        connect->upd(dt);
+        for (auto& connect : *connects)
+            connect->upd(dt);
 
-    for (auto& child : *childrens)
-        child->upd(dt);
+        for (auto& child : *childrens)
+            child->upd(dt);
 
-    if (!disabled && !hidden) {
-        for (auto& animation : *animations)
-            if (animation)
-                if (animation->started)
-                {
-                    animation->currentTime += dt;
-                    animation->position = (animation->currentTime - animation->startTime) / animation->duration;
+        if (!hidden) {
+            for (auto& animation : *animations)
+                if (animation)
+                    if (animation->started)
+                    {
+                        animation->currentTime += dt;
+                        animation->position = (animation->currentTime - animation->startTime) / animation->duration;
 
-                    if (animation->position < 1.f)
-                        animation->frameHandle(*animation);
-                    else {
-                        animation->position = 1.f;
-                        animation->started = false;
+                        if (animation->position < 1.f)
+                            animation->frameHandle(*animation);
+                        else {
+                            animation->position = 1.f;
+                            animation->started = false;
 
-                        animation->frameHandle(*animation);
+                            animation->frameHandle(*animation);
 
-                        if (animation->onFinish)
-                            animation->onFinish();
+                            if (animation->onFinish)
+                                animation->onFinish();
+                        }
                     }
-                }
+        }
     }
 }
 
@@ -150,11 +153,12 @@ void GUI::Container::draw(sf::RenderTarget& target, sf::RenderStates states) con
 {
     states.transform *= getTransform();
 
-    if (!hidden)
+    if (!hidden) {
         render(target, states);
 
-    for (auto& child : *childrens)
-        drawObject(child, target, states);
+        for (auto& child : *childrens)
+            drawObject(child, target, states);
+    }
 }
 
 //Конструктор/Деструктор
