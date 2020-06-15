@@ -46,8 +46,9 @@ GUI::Workspace::~Workspace()
 
 void GUI::Workspace::handleInput()
 {
-    for (uint32_t i = childrens->size(); i > 0U; i--)
-        (*childrens)[i - 1U]->handleIn();
+    if (!disabled)
+        for (uint32_t i = childrens->size(); i > 0U; i--)
+            (*childrens)[i - 1U]->handleIn();
 }
 
 void GUI::Workspace::handleEvent(const sf::Event& event)
@@ -71,21 +72,23 @@ void GUI::Workspace::handleEvent(const sf::Event& event)
         sizeTarget = target->getSize();
     }
 
-    bool isScreenEventObject = false;
-    Object* child;
-    for (uint32_t i = childrens->size(); i > 0U; i--) {
-        child = (*childrens)[i - 1U];
+    if (!disabled) {
+        bool isScreenEventObject = false;
+        Object* child;
+        for (uint32_t i = childrens->size(); i > 0U; i--) {
+            child = (*childrens)[i - 1U];
 
-        if (!isScreenEventObject &&
-            ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
-                child->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
-             (event.type == sf::Event::MouseMoved &&
-                child->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
-        {
-            child->handleEv(event);
-            isScreenEventObject = true;
-        } else
-            child->handleEv(event);
+            if (!isScreenEventObject &&
+                ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
+                    child->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
+                (event.type == sf::Event::MouseMoved &&
+                    child->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
+            {
+                child->handleEv(event);
+                isScreenEventObject = true;
+            } else
+                child->handleEv(event);
+        }
     }
 }
 
@@ -96,8 +99,9 @@ void GUI::Workspace::update()
     if (updatedBorder)
         updateBorder();
 
-    for (auto& child : *childrens)
-        child->upd(dt);
+    if (!disabled)
+        for (auto& child : *childrens)
+            child->upd(dt);
 }
 
 void GUI::Workspace::update(float dt)
@@ -105,19 +109,22 @@ void GUI::Workspace::update(float dt)
     if (updatedBorder)
         updateBorder();
     
-    for (auto& child : *childrens)
-        child->upd(dt);
+    if (!disabled)
+        for (auto& child : *childrens)
+            child->upd(dt);
 }
 
 void GUI::Workspace::render()
 {
-    const sf::View& prevView = target->getView();
-    target->setView(*border);
+    if (!hidden) {
+        const sf::View& prevView = target->getView();
+        target->setView(*border);
 
-    sf::RenderStates states(getTransform());
+        sf::RenderStates states(getTransform());
 
-    for (auto& child : *childrens)
-        drawObject(child, *target, states);
+        for (auto& child : *childrens)
+            drawObject(child, *target, states);
 
-    target->setView(prevView);
+        target->setView(prevView);
+    }
 }

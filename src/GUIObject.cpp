@@ -163,7 +163,9 @@ void GUI::Object::drawObject(Object* object, sf::RenderTarget& target, sf::Rende
     if (object->border)
         target.setView(*object->border);
 
-    target.draw(*object, states);
+    if (object->connect)
+        if (!object->connect->hidden)
+            target.draw(*object, states);
 
     const Object* tmpObject = this;
         while (!tmpObject->border)
@@ -174,11 +176,12 @@ void GUI::Object::drawObject(Object* object, sf::RenderTarget& target, sf::Rende
 
 void GUI::Object::handleIn()
 {
-    if (!disabled)
+    if (!disabled) {
         handleInput();
 
-    for (uint32_t i = connects->size(); i > 0U; i--)
-        (*connects)[i - 1U]->handleIn();
+        for (uint32_t i = connects->size(); i > 0U; i--)
+            (*connects)[i - 1U]->handleIn();
+    }
 }
 
 void GUI::Object::handleEv(const sf::Event& event)
@@ -202,25 +205,26 @@ void GUI::Object::handleEv(const sf::Event& event)
         sizeTarget = target->getSize();
     }
 
-    if (!disabled)
+    if (!disabled) {
         handleEvent(event);
 
-    bool isScreenEventObject = false;
+        bool isScreenEventObject = false;
 
-    Object* connect;
-    for (uint32_t i = connects->size(); i > 0U; i--) {
-        connect = (*connects)[i - 1U];
+        Object* connect;
+        for (uint32_t i = connects->size(); i > 0U; i--) {
+            connect = (*connects)[i - 1U];
 
-        if (!isScreenEventObject &&
-            ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
-                connect->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
-             (event.type == sf::Event::MouseMoved &&
-                connect->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
-        {
-            connect->handleEv(event);
-            isScreenEventObject = true;
-        } else
-            connect->handleEv(event);
+            if (!isScreenEventObject &&
+                ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
+                    connect->isPoint(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)) ||
+                (event.type == sf::Event::MouseMoved &&
+                    connect->isPoint(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)))))
+            {
+                connect->handleEv(event);
+                isScreenEventObject = true;
+            } else
+                connect->handleEv(event);
+        }
     }
 }
 
@@ -229,32 +233,33 @@ void GUI::Object::upd(float dt)
     if (border && updatedBorder)
         updateBorder();
 
-    if (!disabled)
+    if (!disabled) {
         update(dt);
 
-    for (auto& connect : *connects)
-        connect->upd(dt);
+        for (auto& connect : *connects)
+            connect->upd(dt);
 
-    if (!disabled && !hidden) {
-        for (auto& animation : *animations)
-            if (animation)
-                if (animation->started)
-                {
-                    animation->currentTime += dt;
-                    animation->position = (animation->currentTime - animation->startTime) / animation->duration;
+        if (!hidden) {
+            for (auto& animation : *animations)
+                if (animation)
+                    if (animation->started)
+                    {
+                        animation->currentTime += dt;
+                        animation->position = (animation->currentTime - animation->startTime) / animation->duration;
 
-                    if (animation->position < 1.f)
-                        animation->frameHandle(*animation);
-                    else {
-                        animation->position = 1.f;
-                        animation->started = false;
+                        if (animation->position < 1.f)
+                            animation->frameHandle(*animation);
+                        else {
+                            animation->position = 1.f;
+                            animation->started = false;
 
-                        animation->frameHandle(*animation);
+                            animation->frameHandle(*animation);
 
-                        if (animation->onFinish)
-                            animation->onFinish();
+                            if (animation->onFinish)
+                                animation->onFinish();
+                        }
                     }
-                }
+        }
     }
 }
 
